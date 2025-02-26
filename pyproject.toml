@@ -1,0 +1,29 @@
+[project]
+name = "ec2"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Mike Woodhouse", email = "mikewoodhouse@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "dataclasses-json>=0.6.7",
+    "nicegui>=2.11.1",
+    "pytest>=8.3.4",
+    "pytest-watcher>=0.4.3",
+]
+classifiers = ["Private :: Do Not Upload"]  # don't publish  to PyPI, at least until done
+
+[project.scripts]
+ec2 = "ec2:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
