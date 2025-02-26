@@ -1,6 +1,7 @@
-from .scorer import Ball, Scorer
+from .scorer import Ball, ScoreCard, Scorer
 
 __all__ = [
-    "Scorer",
     "Ball",
+    "ScoreCard",
+    "Scorer",
 ]

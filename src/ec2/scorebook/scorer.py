@@ -84,6 +84,39 @@ class Batter:
     def sixes(self) -> int:
         return sum(ball.batter_runs == 6 for ball in self.balls)
 
+    @property
+    def html(self) -> str:
+        return (
+            f"""<div style='display: flex; justify-content: space-between; width: 300px;'>"""
+            f"""<div>{self.name}</div>"""
+            f"""<div>{self.runs} ({self.balls_faced})</div>"""
+        )
+
+
+@binding.bindable_dataclass
+class Batters:
+    next_position: int = 1
+    batters: dict[str, Batter] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        for i in range(1, 12):
+            setattr(self, f"batter_{i}", self.make_batter_lookup_func(i))
+
+    def add(self, name: str) -> Batter:
+        if not self.batters.get(name, None):
+            self.batters[name] = Batter(name=name, position=self.next_position)
+            self.next_position += 1
+        return self.batters[name]
+
+    def make_batter_lookup_func(self, index: int):
+        def batter_lookup() -> Batter:
+            for p in self.batters.values():
+                if p.position == index:
+                    return p
+            return Batter()
+
+        return batter_lookup
+
 
 @binding.bindable_dataclass
 class Bowler:
@@ -119,14 +152,12 @@ class Bowler:
 class ScoreCard:
     runs: int = 0
     wickets: int = 0
-    batters: dict[str, Batter] = field(default_factory=dict)
+    batters: Batters = field(default_factory=Batters)
     bowlers: dict[str, Bowler] = field(default_factory=dict)
     extras: dict[Extra, int] = field(default_factory=dict)
 
     def add_batter(self, name: str) -> Batter:
-        if not self.batters.get(name, None):
-            self.batters[name] = Batter(name=name, position=len(self.batters) + 1)
-        return self.batters[name]
+        return self.batters.add(name)
 
     def add_bowler(self, name: str) -> Bowler:
         if not self.bowlers.get(name, None):
@@ -135,11 +166,15 @@ class ScoreCard:
 
     @property
     def fours(self) -> int:
-        return sum(batter.fours for batter in self.batters.values())
+        return sum(batter.fours for batter in self.batters.batters.values())
 
     @property
     def sixes(self) -> int:
-        return sum(batter.sixes for batter in self.batters.values())
+        return sum(batter.sixes for batter in self.batters.batters.values())
+
+    @property
+    def score(self) -> str:
+        return f"{self.runs}/{self.wickets}"
 
 
 class Scorer:

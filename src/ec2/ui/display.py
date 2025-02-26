@@ -1,18 +1,27 @@
 from nicegui import ui
 
-from ec2.scorebook import Ball, Scorer
-
-from .scorecard import ScoreCard
+from ec2.scorebook import Ball, ScoreCard, Scorer
 
 
 class Display:
-    def __init__(self, card: ScoreCard, book: Scorer) -> None:
-        self.card = card
-        self.book = book
+    def __init__(self) -> None:
+        self.scorer = Scorer(ScoreCard())
+        self.card = self.scorer.card
 
-    def update_book(self):
-        self.book.update(Ball())
+    def update_scorer(self):
+        self.scorer.update(Ball(batter_runs=1, striker="JJ Roy", non_striker="AD Hales", bowler="S Badree"))
 
     def show(self):
-        ui.label("").bind_text_from(self.card, "runs")
-        ui.button(on_click=self.update_book)
+        with ui.row():
+            self.ball_creator()
+            self.innings_card()
+
+    def ball_creator(self):
+        with ui.card():
+            ui.button("Add Ball", on_click=self.update_scorer)
+
+    def innings_card(self):
+        with ui.card():
+            ui.html().bind_content_from(self.card, "score")
+            for pos in range(1, 12):
+                ui.html().bind_content_from(self.card.batters, f"batter_{pos}", backward=lambda batter: batter().html)
