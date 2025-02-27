@@ -21,7 +21,19 @@ class Display:
             ui.button("Add Ball", on_click=self.update_scorer)
 
     def innings_card(self):
-        with ui.card():
-            ui.html().bind_content_from(self.card, "score")
-            for pos in range(1, 12):
-                ui.html().bind_content_from(self.card.batters, f"batter_{pos}", backward=lambda batter: batter().html)
+        with ui.column():
+            with ui.card().tight():
+                ui.label("Score")
+                ui.html().bind_content_from(self.card, "score")
+            with ui.card().tight():
+                ui.label("Batting")
+                for pos in range(1, 12):
+                    ui.html().bind_content_from(
+                        self.card.batting_order, f"batter_{pos}", backward=lambda batter: batter().html
+                    )
+            with ui.card().tight():
+                ui.label("Bowling")
+                for pos in range(1, 12):
+                    ui.html().bind_content_from(
+                        self.card.bowling_order, f"bowler_{pos}", backward=lambda bowler: bowler().html
+                    )

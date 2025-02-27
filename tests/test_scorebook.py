@@ -44,6 +44,9 @@ def test_scorer(match: Match, card: ScoreCard):
 
     assert card.runs == inns_0_runs
     assert card.wickets == inns_0_wkts
+
+    # batters = card.
+
     assert card.batters.get("JJ Roy", None)
 
     assert card.batters["AD Hales"].position == 2
@@ -65,9 +68,6 @@ def test_scorer(match: Match, card: ScoreCard):
 
     jc_buttler = card.batters["JC Buttler"]
     assert jc_buttler.sixes == 3
-
-    sj_benn = card.bowlers["SJ Benn"]
-    assert sj_benn.sixes == 3
 
     s_badree = card.bowlers["S Badree"]
     assert s_badree.wickets == 2

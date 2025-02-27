@@ -87,14 +87,18 @@ class Batter:
     @property
     def html(self) -> str:
         return (
-            f"""<div style='display: flex; justify-content: space-between; width: 300px;'>"""
-            f"""<div>{self.name}</div>"""
-            f"""<div>{self.runs} ({self.balls_faced})</div>"""
+            (
+                f"""<div style='display: flex; justify-content: space-between; width: 300px;'>"""
+                f"""<div>{self.name}</div>"""
+                f"""<div>{self.runs} ({self.balls_faced})</div>"""
+            )
+            if self.position > 0
+            else ""
         )
 
 
 @binding.bindable_dataclass
-class Batters:
+class BattingOrder:
     next_position: int = 1
     batters: dict[str, Batter] = field(default_factory=dict)
 
@@ -144,33 +148,72 @@ class Bowler:
             self.wickets += 1
 
     @property
-    def sixes(self) -> int:
-        return sum(ball.batter_runs == 6 for ball in self.balls)
+    def html(self) -> str:
+        return (
+            (
+                f"""<div style='display: flex; justify-content: space-between; width: 300px;'>"""
+                f"""<div>{self.name}</div>"""
+                f"""<div>{self.wickets}-{self.runs} ({self.balls_bowled})</div>"""
+            )
+            if self.position > 0
+            else ""
+        )
+
+
+@binding.bindable_dataclass
+class BowlingOrder:
+    next_position: int = 1
+    bowlers: dict[str, Bowler] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        for i in range(1, 12):
+            setattr(self, f"bowler_{i}", self.make_bowler_lookup_func(i))
+
+    def add(self, name: str) -> Bowler:
+        if not self.bowlers.get(name, None):
+            self.bowlers[name] = Bowler(name=name, position=self.next_position)
+            self.next_position += 1
+        return self.bowlers[name]
+
+    def make_bowler_lookup_func(self, index: int):
+        def bowler_lookup() -> Bowler:
+            for p in self.bowlers.values():
+                if p.position == index:
+                    return p
+            return Bowler()
+
+        return bowler_lookup
 
 
 @binding.bindable_dataclass
 class ScoreCard:
     runs: int = 0
     wickets: int = 0
-    batters: Batters = field(default_factory=Batters)
-    bowlers: dict[str, Bowler] = field(default_factory=dict)
+    batting_order: BattingOrder = field(default_factory=BattingOrder)
+    bowling_order: BowlingOrder = field(default_factory=BowlingOrder)
     extras: dict[Extra, int] = field(default_factory=dict)
 
     def add_batter(self, name: str) -> Batter:
-        return self.batters.add(name)
+        return self.batting_order.add(name)
 
     def add_bowler(self, name: str) -> Bowler:
-        if not self.bowlers.get(name, None):
-            self.bowlers[name] = Bowler(name=name, position=len(self.bowlers) + 1)
-        return self.bowlers[name]
+        return self.bowling_order.add(name)
+
+    @property
+    def batters(self) -> dict[str, Batter]:
+        return self.batting_order.batters
+
+    @property
+    def bowlers(self) -> dict[str, Bowler]:
+        return self.bowling_order.bowlers
 
     @property
     def fours(self) -> int:
-        return sum(batter.fours for batter in self.batters.batters.values())
+        return sum(batter.fours for batter in self.batting_order.batters.values())
 
     @property
     def sixes(self) -> int:
-        return sum(batter.sixes for batter in self.batters.batters.values())
+        return sum(batter.sixes for batter in self.batting_order.batters.values())
 
     @property
     def score(self) -> str:
