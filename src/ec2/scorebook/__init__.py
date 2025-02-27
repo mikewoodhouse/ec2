@@ -1,7 +1,8 @@
-from .scorer import Ball, ScoreCard, Scorer
+from .scorer import Ball, HowOut, ScoreCard, Scorer
 
 __all__ = [
     "Ball",
+    "HowOut",
     "ScoreCard",
     "Scorer",
 ]

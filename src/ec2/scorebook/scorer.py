@@ -6,7 +6,7 @@ from nicegui import binding
 
 
 class Extra(StrEnum):
-    NO_EXTRA = "None"
+    NO_EXTRA = ""
     WIDE = "w"
     NOBALL = "nb"
     BYE = "b"
@@ -42,13 +42,30 @@ class Ball(DataClassJsonMixin):
     how_out: HowOut = HowOut.NOTOUT
     fielder: str = ""
 
+    def reset(self) -> None:
+        self.batter_runs = 0
+        self.extra_runs = 0
+        self.penalty_runs = 0
+        self.extra_type = Extra.NO_EXTRA
+        self.player_out = ""
+        self.how_out = HowOut.NOTOUT
+        self.fielder = ""
+
     @property
     def total_runs(self) -> int:
-        return self.batter_runs + self.extra_runs + self.penalty_runs
+        return self.batter_runs + (self.extra_runs if self.is_extra else 0) + self.penalty_runs
 
     @property
     def bowler_runs(self) -> int:
         return self.batter_runs + (self.extra_runs if self.extra_type in [Extra.WIDE, Extra.NOBALL] else 0)
+
+    @property
+    def is_extra(self) -> bool:
+        return self.extra_type != Extra.NO_EXTRA
+
+    @property
+    def to_string(self) -> str:
+        return f"{self.bowler} to {self.striker}: {self.batter_runs} runs {self.extra_type} + {self.extra_runs} "
 
 
 @binding.bindable_dataclass
@@ -90,7 +107,9 @@ class Batter:
             (
                 f"""<div style='display: flex; justify-content: space-between; width: 300px;'>"""
                 f"""<div>{self.name}</div>"""
+                f"""<div>{self.how_out}</div>"""
                 f"""<div>{self.runs} ({self.balls_faced})</div>"""
+                """</div>"""
             )
             if self.position > 0
             else ""
@@ -192,6 +211,7 @@ class ScoreCard:
     batting_order: BattingOrder = field(default_factory=BattingOrder)
     bowling_order: BowlingOrder = field(default_factory=BowlingOrder)
     extras: dict[Extra, int] = field(default_factory=dict)
+    history: list[str] = field(default_factory=list)
 
     def add_batter(self, name: str) -> Batter:
         return self.batting_order.add(name)
@@ -219,6 +239,10 @@ class ScoreCard:
     def score(self) -> str:
         return f"{self.runs}/{self.wickets}"
 
+    @property
+    def last_6(self) -> str:
+        return "\n".join(self.history[:-6:-1])
+
 
 class Scorer:
     def __init__(self, card: ScoreCard) -> None:
@@ -242,3 +266,6 @@ class Scorer:
 
         if ball.extra_runs > 0:
             self.card.extras[ball.extra_type] = self.card.extras.get(ball.extra_type, 0) + ball.extra_runs
+
+        desc = f"ball {len(self.card.history)}: {ball.bowler} to {ball.striker}: {ball.batter_runs} + {ball.extra_runs}"
+        self.card.history.append(desc)
