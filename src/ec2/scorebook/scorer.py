@@ -42,15 +42,6 @@ class Ball(DataClassJsonMixin):
     how_out: HowOut = HowOut.NOTOUT
     fielder: str = ""
 
-    def reset(self) -> None:
-        self.batter_runs = 0
-        self.extra_runs = 0
-        self.penalty_runs = 0
-        self.extra_type = Extra.NO_EXTRA
-        self.player_out = ""
-        self.how_out = HowOut.NOTOUT
-        self.fielder = ""
-
     @property
     def total_runs(self) -> int:
         return self.batter_runs + (self.extra_runs if self.is_extra else 0) + self.penalty_runs
@@ -62,10 +53,6 @@ class Ball(DataClassJsonMixin):
     @property
     def is_extra(self) -> bool:
         return self.extra_type != Extra.NO_EXTRA
-
-    @property
-    def to_string(self) -> str:
-        return f"{self.bowler} to {self.striker}: {self.batter_runs} runs {self.extra_type} + {self.extra_runs} "
 
 
 @binding.bindable_dataclass
@@ -212,6 +199,8 @@ class ScoreCard:
     bowling_order: BowlingOrder = field(default_factory=BowlingOrder)
     extras: dict[Extra, int] = field(default_factory=dict)
     history: list[str] = field(default_factory=list)
+    over: int = 0
+    ball: int = 0
 
     def add_batter(self, name: str) -> Batter:
         return self.batting_order.add(name)
@@ -241,13 +230,17 @@ class ScoreCard:
 
     @property
     def last_6(self) -> str:
-        return "\n".join(self.history[:-6:-1])
+        return "\n".join(self.history[:-7:-1])
 
 
 class Scorer:
     def __init__(self, card: ScoreCard) -> None:
         self.card = card
         self.batters_seen: int = 0
+
+    def over_bowled(self):
+        self.card.over += 1
+        self.card.ball = 0
 
     def update(self, ball: Ball):
         striker = self.card.add_batter(ball.striker)
@@ -267,5 +260,8 @@ class Scorer:
         if ball.extra_runs > 0:
             self.card.extras[ball.extra_type] = self.card.extras.get(ball.extra_type, 0) + ball.extra_runs
 
-        desc = f"ball {len(self.card.history)}: {ball.bowler} to {ball.striker}: {ball.batter_runs} + {ball.extra_runs}"
+        if ball.extra_type not in [Extra.WIDE, Extra.NOBALL]:
+            self.card.ball += 1
+        extras = "" if ball.extra_type == Extra.NO_EXTRA else f"+{ball.extra_runs}{ball.extra_type}"
+        desc = f"{self.card.over}.{self.card.ball} {ball.bowler} to {ball.striker}: {ball.batter_runs} runs {extras}"
         self.card.history.append(desc)
