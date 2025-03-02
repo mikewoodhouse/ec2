@@ -33,10 +33,10 @@ class Display:
                     self.ball_creator()
                 with ui.card():
                     self.player_selection()
-            with ui.column():
-                with ui.card():
+            with ui.column().classes("w-96"):
+                with ui.card().classes("w-full"):
                     self.innings_card()
-                with ui.card().classes("w-max"):
+                with ui.card().classes("w-full"):
                     self.innings_log()
 
     @property
@@ -153,22 +153,20 @@ class Display:
         self.non_striker_select.set_options(list(self.batters))
 
     def innings_card(self):
-        with ui.column():
-            with ui.card().tight():
+        with ui.column().classes("w-full"):
+            with ui.card().tight().props("flat border-none"):
                 with ui.row():
-                    ui.label("Score")
-                    ui.html().bind_content_from(self.card, "score")
+                    ui.html().bind_content_from(self.card, "score").classes("text-emerald-800 text-3xl")
 
-            with ui.card().tight():
-                ui.label("Batting")
+            with ui.card().tight().props("flat border-none"):
+                ui.label("Batting").classes("text-rose-800")
                 for pos in range(1, 12):
-                    with ui.element():
-                        ui.html().bind_content_from(
-                            self.card.batting_order, f"batter_{pos}", backward=lambda batter: batter().html
-                        )
+                    ui.html().bind_content_from(
+                        self.card.batting_order, f"batter_{pos}", backward=lambda batter: batter().html
+                    )
 
-            with ui.card().tight():
-                ui.label("Bowling")
+            with ui.card().tight().props("flat border-none"):
+                ui.label("Bowling").classes("text-rose-800")
                 for pos in range(1, 12):
                     ui.html().bind_content_from(
                         self.card.bowling_order, f"bowler_{pos}", backward=lambda bowler: bowler().html
@@ -176,4 +174,4 @@ class Display:
 
     def innings_log(self):
         ui.label("Recent history").classes("text-sky-400")
-        ui.textarea().bind_value_from(self.card, "last_6").classes("flex-auto")
+        ui.textarea().bind_value_from(self.card, "last_6").classes("w-full")
