@@ -226,7 +226,7 @@ class ScoreCard:
 
     @property
     def score(self) -> str:
-        return f"{self.runs}/{self.wickets}"
+        return f"{self.runs}/{self.wickets} ({self.over}.{self.ball})"
 
     @property
     def last_6(self) -> str:
