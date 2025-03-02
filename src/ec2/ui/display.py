@@ -5,6 +5,31 @@ from nicegui import ui
 from ec2.scorebook import Ball, Extra, HowOut, ScoreCard, Scorer
 
 
+class InningsCard:
+    def __init__(self, card: ScoreCard):
+        self.card = card
+
+    def innings_card(self):
+        with ui.column().classes("w-full"):
+            with ui.card().tight().props("flat border-none"):
+                with ui.row():
+                    ui.html().bind_content_from(self.card, "score").classes("text-emerald-800 text-3xl")
+
+            with ui.card().tight().props("flat border-none"):
+                ui.label("Batting").classes("text-rose-800")
+                for pos in range(1, 12):
+                    ui.html().bind_content_from(
+                        self.card.batting_order, f"batter_{pos}", backward=lambda batter: batter().html
+                    )
+
+            with ui.card().tight().props("flat border-none"):
+                ui.label("Bowling").classes("text-rose-800")
+                for pos in range(1, 12):
+                    ui.html().bind_content_from(
+                        self.card.bowling_order, f"bowler_{pos}", backward=lambda bowler: bowler().html
+                    )
+
+
 @dataclass
 class Display:
     striker: str = ""
@@ -21,9 +46,10 @@ class Display:
     batters: set[str] = field(default_factory=set)
 
     def __post_init__(self) -> None:
-        self.scorer = Scorer(ScoreCard())
-        self.card = self.scorer.card
-        print(self.batters)
+        self.inns1 = InningsCard(ScoreCard())
+        self.inns2 = InningsCard(ScoreCard())
+        self.scorer = Scorer(self.inns1.card)
+        self.card = self.inns1.card
 
     def show(self):
         ui.page_title("ec2")
@@ -33,11 +59,28 @@ class Display:
                     self.ball_creator()
                 with ui.card():
                     self.player_selection()
-            with ui.column().classes("w-96"):
-                with ui.card().classes("w-full"):
-                    self.innings_card()
-                with ui.card().classes("w-full"):
-                    self.innings_log()
+            with ui.column():
+                with ui.tabs().classes("w-full") as tabs:
+                    self.first_inns = ui.tab("First")
+                    second_inns = ui.tab("Second")
+                with ui.tab_panels(tabs, value=self.first_inns).classes("w-full"):
+                    with ui.tab_panel(self.first_inns):
+                        with ui.column().classes("w-96"):
+                            with ui.card().classes("w-full"):
+                                self.inns1.innings_card()
+                            with ui.card().classes("w-full"):
+                                self.innings_log()
+                            ui.button("Innings Closed").on_click(self.innings_closed)
+                    with ui.tab_panel(second_inns):
+                        with ui.column().classes("w-96"):
+                            with ui.card().classes("w-full"):
+                                self.inns2.innings_card()
+                            with ui.card().classes("w-full"):
+                                self.innings_log()
+
+    def innings_closed(self):
+        self.scorer = Scorer(self.inns2.card)
+        self.card = self.inns2.card
 
     @property
     def ball_as_string(self) -> str:
@@ -61,7 +104,6 @@ class Display:
         self.striker, self.non_striker = self.non_striker, self.striker
 
     def update_scorer(self):
-        print("applying", self)
         self.scorer.update(
             Ball(
                 striker=self.striker,
@@ -77,14 +119,13 @@ class Display:
             )
         )
         if self.batter_runs % 2 == 1:
-            print("changing ends")
             self.change_ends()
             self.update_dismissed_player_options()
         self.reset()
         self.striker_select.value = self.striker
         self.non_striker_select.value = self.non_striker
         self.ball_desc.update()
-        print("reset to", self)
+        print(id(self.card))
 
     def over_bowled(self):
         self.scorer.over_bowled()
@@ -151,26 +192,6 @@ class Display:
 
         self.striker_select.set_options(list(self.batters))
         self.non_striker_select.set_options(list(self.batters))
-
-    def innings_card(self):
-        with ui.column().classes("w-full"):
-            with ui.card().tight().props("flat border-none"):
-                with ui.row():
-                    ui.html().bind_content_from(self.card, "score").classes("text-emerald-800 text-3xl")
-
-            with ui.card().tight().props("flat border-none"):
-                ui.label("Batting").classes("text-rose-800")
-                for pos in range(1, 12):
-                    ui.html().bind_content_from(
-                        self.card.batting_order, f"batter_{pos}", backward=lambda batter: batter().html
-                    )
-
-            with ui.card().tight().props("flat border-none"):
-                ui.label("Bowling").classes("text-rose-800")
-                for pos in range(1, 12):
-                    ui.html().bind_content_from(
-                        self.card.bowling_order, f"bowler_{pos}", backward=lambda bowler: bowler().html
-                    )
 
     def innings_log(self):
         ui.label("Recent history").classes("text-sky-400")
