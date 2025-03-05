@@ -48,7 +48,7 @@ class Display:
     def __post_init__(self) -> None:
         self.inns1 = InningsCard(ScoreCard())
         self.inns2 = InningsCard(ScoreCard())
-        self.scorer = Scorer(self.inns1.card)
+        self.scorer = Scorer(card=self.inns1.card)
         self.card = self.inns1.card
 
     def show(self):

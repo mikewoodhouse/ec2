@@ -192,7 +192,7 @@ class BowlingOrder:
 
 
 @binding.bindable_dataclass
-class ScoreCard:
+class ScoreCard(DataClassJsonMixin):
     runs: int = 0
     wickets: int = 0
     batting_order: BattingOrder = field(default_factory=BattingOrder)
@@ -233,10 +233,9 @@ class ScoreCard:
         return "\n".join(self.history[:-7:-1])
 
 
+@dataclass
 class Scorer:
-    def __init__(self, card: ScoreCard) -> None:
-        self.card = card
-        self.batters_seen: int = 0
+    card: ScoreCard = field(default_factory=ScoreCard)
 
     def over_bowled(self):
         self.card.over += 1
