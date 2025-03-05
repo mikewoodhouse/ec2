@@ -125,7 +125,6 @@ class Display:
         self.striker_select.value = self.striker
         self.non_striker_select.value = self.non_striker
         self.ball_desc.update()
-        print(id(self.card))
 
     def over_bowled(self):
         self.scorer.over_bowled()
