@@ -42,16 +42,16 @@ class Display:
     player_out: str = ""
     how_out: str = "no"
     fielder: str = ""
+    card_1: ScoreCard = field(default_factory=ScoreCard)
+    card_2: ScoreCard = field(default_factory=ScoreCard)
 
     batters: set[str] = field(default_factory=set)
 
-    def __post_init__(self) -> None:
-        self.inns1 = InningsCard(ScoreCard())
-        self.inns2 = InningsCard(ScoreCard())
-        self.scorer = Scorer(card=self.inns1.card)
-        self.card = self.inns1.card
-
     def show(self):
+        self.inns1 = InningsCard(self.card_1)
+        self.inns2 = InningsCard(self.card_2)
+        self.scorer = Scorer(card=self.card_1)
+        self.card = self.card_1
         ui.page_title("ec2")
         with ui.row():
             with ui.column():
@@ -69,18 +69,18 @@ class Display:
                             with ui.card().classes("w-full"):
                                 self.inns1.innings_card()
                             with ui.card().classes("w-full"):
-                                self.innings_log()
+                                self.innings_log(self.card_1)
                             ui.button("Innings Closed").on_click(self.innings_closed)
                     with ui.tab_panel(second_inns):
                         with ui.column().classes("w-96"):
                             with ui.card().classes("w-full"):
                                 self.inns2.innings_card()
                             with ui.card().classes("w-full"):
-                                self.innings_log()
+                                self.innings_log(self.card_2)
 
     def innings_closed(self):
-        self.scorer = Scorer(self.inns2.card)
-        self.card = self.inns2.card
+        self.scorer = Scorer(self.card_2)
+        self.card = self.card_2
 
     @property
     def ball_as_string(self) -> str:
@@ -192,6 +192,6 @@ class Display:
         self.striker_select.set_options(list(self.batters))
         self.non_striker_select.set_options(list(self.batters))
 
-    def innings_log(self):
+    def innings_log(self, card: ScoreCard):
         ui.label("Recent history").classes("text-sky-400")
-        ui.textarea().bind_value_from(self.card, "last_6").classes("w-full")
+        self.recent_history = ui.textarea().bind_value_from(card, "last_6").classes("w-full")
