@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 from classes import Match
 
-from ec2.scorebook.scorer import Extra, HowOut, ScoreCard, Scorer
+from ec2.scorebook import Extra, HowOut, ScoreCard, Scorer
 
 
 @pytest.fixture

@@ -11,7 +11,7 @@ from datetime import date
 
 from dataclasses_json import DataClassJsonMixin, config, dataclass_json
 
-from ec2.scorebook.scorer import Ball, Extra, HowOut
+from ec2.scorebook import Ball, Extra, HowOut
 
 
 def date_field():
