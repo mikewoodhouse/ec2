@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 from classes import Match
 
-from ec2.scorebook import Extra, HowOut, ScoreCard, Scorer
+from ec2.scorebook import Ball, Extra, HowOut, ScoreCard, Scorer
 
 
 @pytest.fixture
@@ -90,3 +90,22 @@ def test_complete_innings(match: Match):
     assert inns_1.wickets == 9
     assert inns_2.runs == 161
     assert inns_2.wickets == 6
+
+
+@pytest.mark.parametrize(
+    "extra_type,batter_runs,extra_runs,striker_facing",
+    [
+        ("w", 0, 0, True),
+    ],
+)
+def test_correct_facing_results_from_running_extras(
+    extra_type: Extra, batter_runs: int, extra_runs: int, striker_facing: bool
+):
+    scorer = Scorer()
+    striker = "S"
+    non_striker = "N"
+    ball = Ball(
+        extra_type=extra_type, batter_runs=batter_runs, extra_runs=extra_runs, striker=striker, non_striker=non_striker
+    )
+    scorer.update(ball)
+    assert striker_facing == (scorer.card.batters[striker].name == striker)  # is this test right?
