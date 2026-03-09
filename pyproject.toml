@@ -12,6 +12,7 @@ dependencies = [
     "nicegui>=2.11.1",
     "pytest>=8.3.4",
     "pytest-watcher>=0.4.3",
+    "starlette==0.41.2", # later versions fail - unresolved in nicegui as at Mar 2026
 ]
 classifiers = ["Private :: Do Not Upload"]  # don't publish  to PyPI, at least until done
 
